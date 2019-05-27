@@ -24,11 +24,8 @@ class SwaggerParser():
   def getMethod(self, path):
     data = self.doc["paths"][path]
     methods = data.keys()
-    if len(methods) != 1:
-      for method in methods:
-        self.datalist[method] = data
-    else:
-      self.datalist[methods] = data
+    for method in methods:
+      self.datalist[method] = data
     return methods # List or String
 
   def getProperties(self, properties):
@@ -52,6 +49,7 @@ class SwaggerParser():
     return "%s[%s]" % (refClass, refFunc)
 
   def typeExtract(self, paramData):
+    #TODO : consider "additionalProperties" as items
     ret = ""
     # type, schema->type, schema->ref, schema->type * (item -> ref), ...
     if "type" in paramData and "items" in paramData:
@@ -71,6 +69,8 @@ class SwaggerParser():
 
   def getMethodParam(self, method):
     path = self.datalist[method]
+    if "parameters" not in path[method]:
+      return None
     param = path[method]["parameters"]
     ret = {False: {}, True: {}}
     # TODO : Consider parameters format
@@ -84,25 +84,22 @@ class SwaggerParser():
     return ret # { False: { in: type }, True: { in: type } }
 
   def getMethodResponse(self, method):
+    resp = None
     path = self.datalist[method]
-    resp = path[method]["responses"].keys()
+    if "responses" in path[method]:
+      resp = path[method]["responses"].keys()
     # TODO : Consider reponses schema
     return resp
 
 # TODO : Remove if we dont need testing
 if __name__ == "__main__":
   parser = SwaggerParser("swagger.yaml")
-  #print parser.getBasePath()
-  #print parser.getSchemes()
   paths = parser.getPath()
-  print paths[0]
-  pathparam = parser.getPathParam(paths[0])
-  print pathparam
-  method = parser.getMethod(paths[0])
-  print method[0]
-  resp = parser.getMethodResponse(method[0])
-  #print resp
-  param = parser.getMethodParam(method[0])
-  print param
+  for i in paths:
+    pathparam = parser.getPathParam(i)
+    method = parser.getMethod(i)
+    for j in method:
+      resp = parser.getMethodResponse(j)
+      param = parser.getMethodParam(j)
 
 
