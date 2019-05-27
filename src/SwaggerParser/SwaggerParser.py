@@ -2,6 +2,7 @@ import yaml
 
 class SwaggerParser():
   datalist = {}
+  preDef = {}
   def __init__(self, fName):
     self.doc = yaml.load(open(fName,"r"))
 
@@ -14,6 +15,10 @@ class SwaggerParser():
   def getPath(self):
     return self.doc["paths"].keys() # List or String
 
+  def getPathParam(self):
+    #TODO
+    None
+
   def getMethod(self, path):
     data = self.doc["paths"][path]
     methods = data.keys()
@@ -24,18 +29,43 @@ class SwaggerParser():
       self.datalist[methods] = data
     return methods # List or String
 
-  def typeExtract(self, paramData):
-    if "type" in paramData:
-      return paramData["type"]
-    elif "schema" in paramData:
-      # TODO : Consider $ref type, instead of non-type schema
-      if "type" in paramData["schema"]:
-        return paramData["schema"]["type"]
+  def getProperties(self, properties):
+    # TODO : Consider whether default = false
+    ret = {False: {}, True: {}}
+    reqList = []
+    if "required" in properties:
+      for i in properties["required"]:
+        reqList.append(i)
+    for i in properties["properties"]:
+      if i in reqList:
+        ret[True][i] = self.typeExtract(properties["properties"][i])
       else:
-        return paramData["schema"]
+        ret[False][i] = self.typeExtract(properties["properties"][i])
+    return ret
+
+  def refExtract(self, refClass, refFunc):
+    funcs = self.doc[refClass][refFunc]
+    self.preDef[refClass] = {}
+    self.preDef[refClass][refFunc] = self.getProperties(funcs)
+    return "%s[%s]" % (refClass, refFunc)
+
+  def typeExtract(self, paramData):
+    ret = ""
+    # type, schema->type, schema->ref, schema->type * (item -> ref), ...
+    if "type" in paramData and "items" in paramData:
+      # main type * item type
+      item = self.typeExtract(paramData["items"])
+      ret = "%s*%s" % (paramData["type"], item)
+    elif "type" in paramData:
+      ret = paramData["type"]
+    elif "$ref" in paramData:
+      refer = paramData["$ref"].split("/")
+      ret = self.refExtract(refer[1],refer[2])
+    elif "schema" in paramData:
+      ret = self.typeExtract(paramData["schema"])
     else:
-      # TODO : find other key value for type
-      return ""
+      raise TypeExtractException
+    return ret
 
   def getMethodParam(self, method):
     path = self.datalist[method]
@@ -57,37 +87,17 @@ class SwaggerParser():
     # TODO : Consider reponses schema
     return resp
 
-  def getDef(self):
-    # TODO : Consider definitions field
-    return "" # List or String
-    None
-
-  def getDefProp(self):
-    # TODO : Consider parameters field
-    return "" # Class { field : type, ... }
-    None
-
-  def getParam(self):
-    # TODO : Consider parameters field
-    None
-
-  def getSecDef(self):
-    # TODO : Consider securityDefintions field
-    None
-
-
-
 # TODO : Remove if we dont need testing
 if __name__ == "__main__":
   parser = SwaggerParser("swagger.yaml")
-  print parser.getBasePath()
-  print parser.getSchemes()
+  #print parser.getBasePath()
+  #print parser.getSchemes()
   paths = parser.getPath()
-  print paths
+  print paths[0]
   method = parser.getMethod(paths[0])
-  print method
+  print method[0]
   resp = parser.getMethodResponse(method[0])
-  print resp
+  #print resp
   param = parser.getMethodParam(method[0])
   print param
 
