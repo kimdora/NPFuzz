@@ -15,9 +15,11 @@ class SwaggerParser():
   def getPath(self):
     return self.doc["paths"].keys() # List or String
 
-  def getPathParam(self):
-    #TODO
-    None
+  def getPathParam(self, path):
+    if "parameters" in self.doc["paths"][path]:
+      return self.doc["paths"][path]
+    else:
+      return None
 
   def getMethod(self, path):
     data = self.doc["paths"][path]
@@ -94,6 +96,8 @@ if __name__ == "__main__":
   #print parser.getSchemes()
   paths = parser.getPath()
   print paths[0]
+  pathparam = parser.getPathParam(paths[0])
+  print pathparam
   method = parser.getMethod(paths[0])
   print method[0]
   resp = parser.getMethodResponse(method[0])
