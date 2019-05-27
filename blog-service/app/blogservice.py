@@ -6,7 +6,7 @@ from hashlib import sha1
 from sqlite3 import connect as sqlite3_connect
 from re import match
 
-hash = lambda x: sha1(x.encode('utf-8')).hexdigest()
+hash = lambda x: sha1(x.encode('utf-8') + b'salt_is_salty').hexdigest()[10:30]
 dbconn = lambda: sqlite3_connect('blog.db')
 
 BlogService = Blueprint('blogservice', __name__)
@@ -32,9 +32,9 @@ def show_posts():
   posts = []
   with dbconn() as db:
     c = db.cursor()
-    r = c.execute('SELECT id, body FROM post ORDER BY id DESC;')
+    r = c.execute('SELECT body FROM post ORDER BY id DESC;')
     for post in r:
-      posts.append({'id': post[0], 'body': post[1]})
+      posts.append({'body': post[0]})
   return jsonify({'error': 0, 'posts': posts})
 
 @BlogService.route('/posts/', methods=['POST'])
@@ -70,9 +70,9 @@ def delete_post(_id):
 def show_post(_id):
   with dbconn() as db:
     c = db.cursor()
-    c.execute('SELECT id, body FROM post WHERE id=?;', (_id, ))
+    c.execute('SELECT body FROM post WHERE id=?;', (_id, ))
     post = c.fetchone()
-    return jsonify({'error': 0, 'post': {'id': post[0], 'body': post[1]}})
+    return jsonify({'error': 0, 'post': {'body': post[0], 'checksum': hash(post[0])}})
   return jsonify({'error': 1, 'message': 'unknown error'}), 500 # should not be reach
 
 @BlogService.route('/posts/<_id>', methods=['PUT'])
@@ -87,19 +87,20 @@ def update_post(_id):
     return jsonify({'error': 1, 'message': 'invalid content'}), 400
   _body = data['body']
 
-  if 'hash' not in data or not isinstance(data['hash'], str)\
-    or match('^[0-9a-f]{40}$', data['hash']) == None:
-    return jsonify({'error': 1, 'message': 'invalid hash'}), 400
-  _hash = data['hash']
+  if 'checksum' not in data or not isinstance(data['checksum'], str)\
+    or match('^[0-9a-f]{20}$', data['checksum']) == None:
+    return jsonify({'error': 1, 'message': 'invalid checksum'}), 400
+  _checksum = data['checksum']
 
   with dbconn() as db:
     c = db.cursor()
     c.execute('SELECT body FROM post WHERE id=?;', (_id, ))
     post = c.fetchone()
-    if hash(post[0]) == _hash:
+    if hash(post[0]) == _checksum:
       c.execute('UPDATE post SET body=? WHERE id=?;', (_body, _id))
       if c.rowcount != 1:
-        return jsonify({'error': 1, 'message': 'update error'}), 500
+        return jsonify({'error': 1, 'message': 'update error'}), 500 # should not be reach
     else:
-      return jsonify({'error': 1, 'message': 'invalid hash'}), 400
+      return jsonify({'error': 1, 'message': 'invalid checksum'}), 400
   return jsonify({'error': 0}), 201
+
