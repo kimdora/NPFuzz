@@ -97,6 +97,7 @@ def update_post(_id):
     c.execute('SELECT body FROM post WHERE id=?;', (_id, ))
     post = c.fetchone()
     if hash(post[0]) == _checksum:
+      #raise Exception # RESTler's imaginary subtle bug 
       c.execute('UPDATE post SET body=? WHERE id=?;', (_body, _id))
       if c.rowcount != 1:
         return jsonify({'error': 1, 'message': 'update error'}), 500 # should not be reach
