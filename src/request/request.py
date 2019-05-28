@@ -1,8 +1,8 @@
-class Request():
+class Request:
   def __init__(self, request):
     self.base_path = request["basePath"]
     self.path = request["path"]
-    self.schema = request["schemes"]
+    self.schemes = request["schemes"]
     self.method = request["method"]
     self.content_type = request["contentType"]
     self.parameter = request["parameter"]
@@ -38,19 +38,19 @@ class Request():
     return self.response
 
   def has_dependencies(self, seq):
-    return consume(req).issubset(produce(seq))
+    return self.consume(req).issubset(self.produce(seq))
 
   def consume(self, req):
-      required = {'GET /blog/posts/{id}': 'id'}
-      res = set()
-      if req in required:
-          res.add(required[req])
-      return res
+    required = {'GET /blog/posts/{id}': 'id'}
+    res = set()
+    if req in required:
+      res.add(required[req])
+    return res
 
   def produce(self, seq):
-      dynamic_objects = set()
-      response = {'POST /blog/posts': 'id', 'GET /blog/posts/{id}': 'checksum'}
-      for req in seq:
-          if req in response:
-              new_objects = dynamic_objects.add(response[req])
-      return dynamic_objects
+    dynamic_objects = set()
+    response = {'POST /blog/posts': 'id', 'GET /blog/posts/{id}': 'checksum'}
+    for req in seq:
+      if req in response:
+        new_objects = dynamic_objects.add(response[req])
+    return dynamic_objects
