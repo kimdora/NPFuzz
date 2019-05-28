@@ -16,7 +16,7 @@ class Request():
     return self.base_path
 
   def get_schema(self):
-    return self.schema
+    return self.schemes
 
   def get_dependency(self):
     return self.dependency
