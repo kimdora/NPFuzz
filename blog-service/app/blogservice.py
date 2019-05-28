@@ -11,6 +11,14 @@ dbconn = lambda: sqlite3_connect('blog.db')
 
 BlogService = Blueprint('blogservice', __name__)
 
+def only_accept_json(f):
+  @wraps(f)
+  def decorated_function(*args, **kwargs):
+    if request.accept_mimetypes.best_match(['application/json']) != 'application/json':
+      return '', 406
+    return f(*args, **kwargs)
+  return decorated_function
+
 def check_id_exists(f):
   @wraps(f)
   def decorated_function(*args, **kwargs):
@@ -28,6 +36,7 @@ def check_id_exists(f):
   return decorated_function
 
 @BlogService.route('/posts/', methods=['GET'])
+@only_accept_json
 def show_posts():
   posts = []
   with dbconn() as db:
@@ -38,6 +47,7 @@ def show_posts():
   return jsonify({'error': 0, 'posts': posts})
 
 @BlogService.route('/posts/', methods=['POST'])
+@only_accept_json
 def new_post():
   if request.content_type == 'application/json':
     data = json_decode(request.data)
@@ -57,6 +67,7 @@ def new_post():
   return jsonify({'error': 0, 'id': new_id}), 201
 
 @BlogService.route('/posts/<_id>', methods=['DELETE'])
+@only_accept_json
 @check_id_exists
 def delete_post(_id):
   with dbconn() as db:
@@ -66,6 +77,7 @@ def delete_post(_id):
   return jsonify({'error': 0})
 
 @BlogService.route('/posts/<_id>', methods=['GET'])
+@only_accept_json
 @check_id_exists
 def show_post(_id):
   with dbconn() as db:
@@ -76,6 +88,7 @@ def show_post(_id):
   return jsonify({'error': 1, 'message': 'unknown error'}), 500 # should not be reach
 
 @BlogService.route('/posts/<_id>', methods=['PUT'])
+@only_accept_json
 @check_id_exists
 def update_post(_id):
   if request.content_type == 'application/json':
