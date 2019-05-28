@@ -4,7 +4,7 @@ class Request():
   def __init__(self, request):
     self.base_path = request["basePath"]
     self.path = request["path"]
-    self.schema = request["schemes"]
+    self.schemes = request["schemes"]
     self.method = request["method"]
     self.content_type = request["contentType"]
     self.parameter = request["parameter"]
@@ -18,8 +18,8 @@ class Request():
   def get_schema(self):
     return self.schema
 
-  def get_path_param(self):
-    return self.path_param
+  def get_dependency(self):
+    return self.dependency
 
   def get_path(self):
     return self.path
@@ -65,6 +65,8 @@ class SwaggerParser():
         request["response"] = resp
         request["dependency"] = dependency
         req_set.append(Request(request))
+    #for i in req_set:
+    #  print i.response
     return req_set
 
   def get_base_path(self):
@@ -107,7 +109,7 @@ class SwaggerParser():
     funcs = self.doc[ref_class][ref_func]
     self.pre_def[ref_class] = {}
     self.pre_def[ref_class][ref_func] = self.get_properties(funcs)
-    return self.get_properties(funcs)
+    return self.pre_def[ref_class]
 
   def extract_type(self, param_data):
     #TODO : consider "additionalProperties" as items
@@ -125,7 +127,7 @@ class SwaggerParser():
     elif "schema" in param_data:
       ret = self.extract_type(param_data["schema"])
     else:
-      ret = None
+      ret = ""
     return ret
 
   def get_produce(self, method):
@@ -137,7 +139,7 @@ class SwaggerParser():
   def get_method_param(self, method):
     path = self.datalist[method]
     if "parameters" not in path[method]:
-      return None, None, None
+      return {}, {}, {}
     param = path[method]["parameters"]
     ret = {"optional": {}, "require": {}}
     dependency = {}
@@ -161,9 +163,10 @@ class SwaggerParser():
     ret = {}
     path = self.datalist[method]
     if "responses" in path[method]:
-      resp = path[method]["responses"].keys()
-      for i in resp:
-        ret[i] = self.extract_type(i)
+      resp = path[method]["responses"]
+      nums = resp.keys()
+      for i in nums:
+        ret[i] = self.extract_type(resp[i])
     return ret
 
 # TODO : Remove if we dont need testing
