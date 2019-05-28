@@ -2,172 +2,171 @@ import yaml
 # integer, string, array, boolean
 class Request():
   def __init__(self, request):
-    self.basepath = request["basePath"]
+    self.base_path = request["basePath"]
     self.path = request["path"]
     self.schema = request["schemes"]
     self.method = request["method"]
-    self.contentType = request["contentType"]
+    self.content_type = request["contentType"]
     self.parameter = request["parameter"]
-    self.reqParam = request["pathParam"]
+    self.req_param = request["pathParam"]
     self.response = request["response"]
     self.dependency = request["dependency"]
 
-  def getBasePath(self):
-    return self.basePath
+  def get_base_path(self):
+    return self.base_path
 
-  def getSchema(self):
+  def get_schema(self):
     return self.schema
 
-  def getPathParam(self):
-    return self.pathParam
+  def get_path_param(self):
+    return self.path_param
 
-  def getPath(self):
+  def get_path(self):
     return self.path
 
-  def getMethod(self):
+  def get_method(self):
     return self.method
 
-  def getContentType(self):
-    return self.contentType
+  def get_content_type(self):
+    return self.content_type
 
-  def getParameter(self):
+  def get_parameter(self):
     return self.parameter
 
-  def getReqParam(self):
-    return self.reqParam
+  def get_req_param(self):
+    return self.req_param
 
-  def getResponse(self):
+  def get_response(self):
     return self.response
 
 class SwaggerParser():
   datalist = {}
-  preDef = {}
-  def __init__(self, fName):
-    self.doc = yaml.load(open(fName,"r"))
+  pre_def = {}
+  def __init__(self, f_name):
+    self.doc = yaml.load(open(f_name,"r"))
 
-  def getReqSet(self):
-    reqSet = []
-    paths = self.getPath()
+  def get_req_set(self):
+    req_set = []
+    paths = self.get_path()
     for i in paths:
       request = {}
-      method = parser.getMethod(i)
+      method = parser.get_method(i)
       for j in method:
-        resp = parser.getMethodResponse(j)
-        param, pathParam, dependency = self.getMethodParam(j)
-        produces = self.getProduce(j)
-        request["basePath"] = self.getBasePath()
-        request["schemes"] = self.getSchemes()
+        resp = parser.get_method_response(j)
+        param, path_param, dependency = self.get_method_param(j)
+        produces = self.get_produce(j)
+        request["basePath"] = self.get_base_path()
+        request["schemes"] = self.get_schemes()
         request["path"] = i
         request["method"] = j
         request["contentType"] = produces
         request["parameter"] = param
-        request["pathParam"] = pathParam
+        request["pathParam"] = path_param
         request["response"] = resp
         request["dependency"] = dependency
-        reqSet.append(Request(request))
-    return reqSet
+        req_set.append(Request(request))
+    return req_set
 
-  def getBasePath(self):
+  def get_base_path(self):
     return self.doc["basePath"] # String
 
-  def getSchemes(self):
+  def get_schemes(self):
     return self.doc["schemes"] # List or String
 
-  def getPath(self):
+  def get_path(self):
     return self.doc["paths"].keys() # List or String
 
-  def getPathParam(self, path):
+  def get_path_param(self, path):
     if "parameters" in self.doc["paths"][path]:
       return self.doc["paths"][path]
     else:
       return None
 
-  def getMethod(self, path):
+  def get_method(self, path):
     data = self.doc["paths"][path]
     methods = data.keys()
     for method in methods:
       self.datalist[method] = data
     return methods # List or String
 
-  def getProperties(self, properties):
+  def get_properties(self, properties):
     # TODO : Consider whether default = false
-    ret = {"Optional": {}, "Require": {}}
-    reqList = []
+    ret = {"optional": {}, "require": {}}
+    req_list = []
     if "required" in properties:
       for i in properties["required"]:
-        reqList.append(i)
+        req_list.append(i)
     for i in properties["properties"]:
-      if i in reqList:
-        ret["Require"][i] = self.typeExtract(properties["properties"][i])
+      if i in req_list:
+        ret["require"][i] = self.type_extract(properties["properties"][i])
       else:
-        ret["Optional"][i] = self.typeExtract(properties["properties"][i])
+        ret["optional"][i] = self.type_extract(properties["properties"][i])
     return ret
 
-  def refExtract(self, refClass, refFunc):
-    funcs = self.doc[refClass][refFunc]
-    self.preDef[refClass] = {}
-    self.preDef[refClass][refFunc] = self.getProperties(funcs)
-    return self.getProperties(funcs)
+  def ref_extract(self, ref_class, ref_func):
+    funcs = self.doc[ref_class][ref_func]
+    self.pre_def[ref_class] = {}
+    self.pre_def[ref_class][ref_func] = self.get_properties(funcs)
+    return self.get_properties(funcs)
 
-  def typeExtract(self, paramData):
+  def type_extract(self, param_data):
     #TODO : consider "additionalProperties" as items
     ret = ""
     # type, schema->type, schema->ref, schema->type * (item -> ref), ...
-    if "type" in paramData and "items" in paramData:
+    if "type" in param_data and "items" in param_data:
       # main type * item type
-      item = self.typeExtract(paramData["items"])
-      ret = "%s*%s" % (paramData["type"], item)
-    elif "type" in paramData:
-      ret = paramData["type"]
-    elif "$ref" in paramData:
-      refer = paramData["$ref"].split("/")
-      ret = self.refExtract(refer[1],refer[2])
-    elif "schema" in paramData:
-      ret = self.typeExtract(paramData["schema"])
+      item = self.type_extract(param_data["items"])
+      ret = "%s*%s" % (param_data["type"], item)
+    elif "type" in param_data:
+      ret = param_data["type"]
+    elif "$ref" in param_data:
+      refer = param_data["$ref"].split("/")
+      ret = self.ref_extract(refer[1],refer[2])
+    elif "schema" in param_data:
+      ret = self.type_extract(param_data["schema"])
     else:
       ret = None
     return ret
 
-  def getProduce(self, method):
+  def get_produce(self, method):
     path = self.datalist[method]
     if "produces" not in path[method]:
       return None
     return path[method]["produces"]
 
-  def getMethodParam(self, method):
+  def get_method_param(self, method):
     path = self.datalist[method]
     if "parameters" not in path[method]:
       return None, None, None
     param = path[method]["parameters"]
-    ret = {"Optional": {}, "Require": {}}
+    ret = {"optional": {}, "require": {}}
     dependency = {}
-    pathParam = {}
+    path_param = {}
     # TODO : Consider parameters format
     # Now : { Optional: { in: type }, Require: { in: type } }
     for data in param:
-      vType = self.typeExtract(data)
+      v_type = self.type_extract(data)
       if data["in"] == "path":
-        pathParam[data["name"]] = vType
-        dependency[data["name"]] = vType
+        path_param[data["name"]] = v_type
+        dependency[data["name"]] = v_type
       else:
         if data["required"] == True:
-          ret["Require"][data["name"]] = vType
-          dependency[data["name"]] = vType
+          ret["require"][data["name"]] = v_type
+          dependency[data["name"]] = v_type
         else:
-          ret["Optional"][data["name"]] = vType
-    return ret, pathParam, dependency
+          ret["optional"][data["name"]] = v_type
+    return ret, path_param, dependency
 
-  def getMethodResponse(self, method):
+  def get_method_response(self, method):
     ret = {}
     path = self.datalist[method]
     if "responses" in path[method]:
       resp = path[method]["responses"].keys()
       for i in resp:
-        ret[i] = self.typeExtract(i)
-    # TODO : Consider reponses schema
+        ret[i] = self.type_extract(i)
     return ret
 
 # TODO : Remove if we dont need testing
 if __name__ == "__main__":
   parser = SwaggerParser("swagger.yaml")
-  parser.getReqSet()
+  parser.get_req_set()
