@@ -16,8 +16,8 @@ class Request():
   def get_schema(self):
     return self.schema
 
-  def get_path_param(self):
-    return self.path_param
+  def get_dependency(self):
+    return self.dependency
 
   def get_path(self):
     return self.path
