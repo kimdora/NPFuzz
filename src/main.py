@@ -31,5 +31,6 @@ if __name__ == '__main__':
                             description='REST API Fuzzing with State Diversity')
   parser.add_argument('--target', required=True, metavar='*.yaml',
                                   help='swagger yaml file of target')
-  parser.add_argument('--config', required=True, metavar='config.yaml',                                         help='configuration file')
+  parser.add_argument('--config', required=True, metavar='config.yaml',
+                                  help='configuration file')
   exit(main(parser.parse_args()))
