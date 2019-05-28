@@ -85,7 +85,6 @@ def show_post(_id):
     c.execute('SELECT body FROM post WHERE id=?;', (_id, ))
     post = c.fetchone()
     return jsonify({'error': 0, 'post': {'body': post[0], 'checksum': hash(post[0])}})
-  return jsonify({'error': 1, 'message': 'unknown error'}), 500 # should not be reach
 
 @BlogService.route('/posts/<_id>', methods=['PUT'])
 @only_accept_json
