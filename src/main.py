@@ -7,8 +7,8 @@ def main(params):
   # 1. Parse swaager yaml file and get reqSet
   try:
     swagger_parser = SwaggerParser(params.target)
-    reqSet = swagger_parser.get_req_set()
-    print(reqSet)
+    req_set = swagger_parser.get_req_set()
+    print(req_set)
   except FileNotFoundError:
     error('No such file: {}'.format(params.target))
   # 2.
