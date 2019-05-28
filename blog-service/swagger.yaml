@@ -7,7 +7,7 @@ info:
     email: ahnmo@pagez.kr
 
 paths:
-  "/blog/posts":
+  "/posts/":
     get:
       summary: Returns list of blog posts
       produces:
@@ -73,7 +73,7 @@ paths:
               message:
                 type: string
                 example: "invalid content"
-  "/blog/posts/{id}":
+  "/posts/{id}":
     delete:
       summary: Delete a blog post with matching "id"
       produces:
@@ -81,12 +81,12 @@ paths:
       parameters:
       - in: path
         name: id
-        description: the id which want to see the post
+        description: post id which want to delete
         required: true
         type: integer
       responses:
         200:
-          description: success to fetch the post
+          description: success to delete the post
           schema:
             type: object
             properties:
@@ -112,7 +112,7 @@ paths:
       parameters:
       - in: path
         name: id
-        description: the id which want to see the post
+        description: post id which want to see
         required: true
         type: integer
       responses:
@@ -175,7 +175,7 @@ paths:
               example: "01234567890123456789"
       responses:
         201:
-          description: success to create post
+          description: success to updated post
           schema:
             type: object
             properties:
@@ -207,6 +207,6 @@ paths:
                 example: "page not found"
 
 host: localhost:5000
-basePath: /api
+basePath: /blog
 schemes:
  - http
