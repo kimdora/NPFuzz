@@ -43,7 +43,7 @@ class SwaggerParser():
   datalist = {}
   pre_def = {}
   def __init__(self, f_name):
-    self.doc = yaml.load(open(f_name,"r"))
+    self.doc = yaml.load(open(f_name, "r"))
 
   def get_req_set(self):
     req_set = []
@@ -98,32 +98,32 @@ class SwaggerParser():
         req_list.append(i)
     for i in properties["properties"]:
       if i in req_list:
-        ret["require"][i] = self.type_extract(properties["properties"][i])
+        ret["require"][i] = self.extract_type(properties["properties"][i])
       else:
-        ret["optional"][i] = self.type_extract(properties["properties"][i])
+        ret["optional"][i] = self.extract_type(properties["properties"][i])
     return ret
 
-  def ref_extract(self, ref_class, ref_func):
+  def extract_ref(self, ref_class, ref_func):
     funcs = self.doc[ref_class][ref_func]
     self.pre_def[ref_class] = {}
     self.pre_def[ref_class][ref_func] = self.get_properties(funcs)
     return self.get_properties(funcs)
 
-  def type_extract(self, param_data):
+  def extract_type(self, param_data):
     #TODO : consider "additionalProperties" as items
     ret = ""
     # type, schema->type, schema->ref, schema->type * (item -> ref), ...
     if "type" in param_data and "items" in param_data:
       # main type * item type
-      item = self.type_extract(param_data["items"])
+      item = self.extract_type(param_data["items"])
       ret = "%s*%s" % (param_data["type"], item)
     elif "type" in param_data:
       ret = param_data["type"]
     elif "$ref" in param_data:
       refer = param_data["$ref"].split("/")
-      ret = self.ref_extract(refer[1],refer[2])
+      ret = self.extract_ref(refer[1],refer[2])
     elif "schema" in param_data:
-      ret = self.type_extract(param_data["schema"])
+      ret = self.extract_type(param_data["schema"])
     else:
       ret = None
     return ret
@@ -145,7 +145,7 @@ class SwaggerParser():
     # TODO : Consider parameters format
     # Now : { Optional: { in: type }, Require: { in: type } }
     for data in param:
-      v_type = self.type_extract(data)
+      v_type = self.extract_type(data)
       if data["in"] == "path":
         path_param[data["name"]] = v_type
         dependency[data["name"]] = v_type
@@ -163,7 +163,7 @@ class SwaggerParser():
     if "responses" in path[method]:
       resp = path[method]["responses"].keys()
       for i in resp:
-        ret[i] = self.type_extract(i)
+        ret[i] = self.extract_type(i)
     return ret
 
 # TODO : Remove if we dont need testing
