@@ -1,0 +1,212 @@
+swagger: '2.0'
+info:
+  description: Simple Blog Post API for NPFuzz
+  version: 1.0.0
+  title: Simple Blog Post API
+  contact:
+    email: ahnmo@pagez.kr
+
+paths:
+  "/posts/":
+    get:
+      summary: Returns list of blog posts
+      produces:
+      - application/json
+      responses:
+        200:
+          description: list of blog posts
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                description: error code, should be 0 when 200
+                example: 0
+              posts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    body:
+                      type: string
+                      description: content of post
+                      example: "HELL oWorld!"
+                description: list of posts
+    post:
+      summary: Create a new blog post
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            body:
+              type: string
+              description: content of post
+              example: "HELL oWorld!"
+      responses:
+        201:
+          description: success to create post
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                example: 0
+              id:
+                type: integer
+                description: the id of new post
+                example: 1
+        400:
+          description: invalid client input
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                example: 1
+              message:
+                type: string
+                example: "invalid content"
+  "/posts/{id}":
+    delete:
+      summary: Delete a blog post with matching "id"
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        description: post id which want to delete
+        required: true
+        type: integer
+      responses:
+        200:
+          description: success to delete the post
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                description: error code, should be 0 when 200
+                example: 0
+        404:
+          description: post not found
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                example: 1
+              message:
+                type: string
+                example: "page not found"
+    get:
+      summary: Returns a blog post with matching "id"
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        description: post id which want to see
+        required: true
+        type: integer
+      responses:
+        200:
+          description: success to fetch the post
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                description: error code, should be 0 when 200
+                example: 0
+              post:
+                type: object
+                properties:
+                  body:
+                    type: string
+                    description: content of post
+                    example: "HELL oWorld!"
+                  checksum:
+                    type: string
+                    description: checksum of content of post
+                    example: "01234567890123456789"
+        404:
+          description: post not found
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                example: 1
+              message:
+                type: string
+                example: "page not found"
+    put:
+      summary: Updates a blog post with matching "id" and "checksum"
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        description: the post id which want to update
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          properties:
+            body:
+              type: string
+              description: new content of post
+              example: "HELL oWorld! 2"
+            checksum:
+              type: string
+              description: the checksum of previous content
+              example: "01234567890123456789"
+      responses:
+        201:
+          description: success to updated post
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                description: error code, should be 0 when 201
+                example: 0
+        400:
+          description: invalid client input
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                example: 1
+              message:
+                type: string
+                example: "invalid checksum"
+        404:
+          description: post not found
+          schema:
+            type: object
+            properties:
+              error:
+                type: integer
+                example: 1
+              message:
+                type: string
+                example: "page not found"
+
+host: localhost:5000
+basePath: /blog
+schemes:
+ - http

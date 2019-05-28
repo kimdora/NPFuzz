@@ -1,58 +1,22 @@
 import yaml
+
+from request.request import Request
 # integer, string, array, boolean
-class Request():
-  def __init__(self, request):
-    self.base_path = request["basePath"]
-    self.path = request["path"]
-    self.schemes = request["schemes"]
-    self.method = request["method"]
-    self.content_type = request["contentType"]
-    self.parameter = request["parameter"]
-    self.req_param = request["pathParam"]
-    self.response = request["response"]
-    self.dependency = request["dependency"]
-
-  def get_base_path(self):
-    return self.base_path
-
-  def get_schema(self):
-    return self.schemes
-
-  def get_dependency(self):
-    return self.dependency
-
-  def get_path(self):
-    return self.path
-
-  def get_method(self):
-    return self.method
-
-  def get_content_type(self):
-    return self.content_type
-
-  def get_parameter(self):
-    return self.parameter
-
-  def get_req_param(self):
-    return self.req_param
-
-  def get_response(self):
-    return self.response
 
 class SwaggerParser():
   datalist = {}
   pre_def = {}
   def __init__(self, f_name):
-    self.doc = yaml.load(open(f_name, "r"))
+    self.doc = yaml.safe_load(open(f_name, "r"))
 
   def get_req_set(self):
     req_set = []
     paths = self.get_path()
     for i in paths:
       request = {}
-      method = parser.get_method(i)
+      method = self.get_method(i)
       for j in method:
-        resp = parser.get_method_response(j)
+        resp = self.get_method_response(j)
         param, path_param, dependency = self.get_method_param(j)
         produces = self.get_produce(j)
         request["basePath"] = self.get_base_path()
@@ -168,8 +132,3 @@ class SwaggerParser():
       for i in nums:
         ret[i] = self.extract_type(resp[i])
     return ret
-
-# TODO : Remove if we dont need testing
-if __name__ == "__main__":
-  parser = SwaggerParser("swagger.yaml")
-  parser.get_req_set()
