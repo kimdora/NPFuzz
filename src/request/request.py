@@ -10,47 +10,26 @@ class Request:
     self.response = request["response"]
     self.dependency = request["dependency"]
 
-  def get_base_path(self):
-    return self.base_path
-
-  def get_schema(self):
-    return self.schemes
-
-  def get_dependency(self):
-    return self.dependency
-
-  def get_path(self):
-    return self.path
-
-  def get_method(self):
-    return self.method
-
-  def get_content_type(self):
-    return self.content_type
-
-  def get_parameter(self):
-    return self.parameter
-
-  def get_req_param(self):
-    return self.req_param
-
-  def get_response(self):
+  def get_response_of(self):
     return self.response
 
-  def has_dependencies(self, seq):
-    return self.consume(req).issubset(self.produce(seq))
+  def has_dependencies_with(self, seq):
+    return self.consume().issubset(self.produce(seq))
 
-  def consume(self, req):
-    required = {'GET /blog/posts/{id}': 'id'}
+  def consume(self):
+    # TODO!
     res = set()
-    if req in required:
-      res.add(required[req])
+    if self.method == "POST":
+      return set()
+    for k in self.req_param.keys():
+      res.add(k)
     return res
 
   def produce(self, seq):
+    # TODO!
     dynamic_objects = set()
-    response = {'POST /blog/posts': 'id', 'GET /blog/posts/{id}': 'checksum'}
     for req in seq:
-      if req in response:
-        new_objects = dynamic_objects.add(response[req])
+      for k, v in (req.get_response_of()).items():
+        if k >= 200 and k < 300: # http status code is 2XX
+          dynamic_objects.add(v)
     return dynamic_objects

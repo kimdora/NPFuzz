@@ -1,6 +1,7 @@
 import argparse
 import yaml
 
+from restler import *
 from swagger.parser import SwaggerParser
 from utils.config_utils import *
 from utils.yaml_utils import read_yaml_file
@@ -25,8 +26,12 @@ def main(params):
 
   # REST-ler method
   n = 1
+  bfs = BFS(req_set)
+  #bfsfast = BFSFast(req_set)
+  #randomwalk = RandomWalk(req_set)
+
   while n <= max_length:
-    #seq_set = extend(seq_set, req_set)
+    seq_set = bfs.search(n)
     #seq_set = render(seq_set, seq_set)
     n = n + 1
 
