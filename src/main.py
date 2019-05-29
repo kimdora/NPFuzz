@@ -19,10 +19,21 @@ def read_params(params):
     error("[*] Program exits...")
   return doc, config
 
+def find_val(obj, target_key):
+  for k, v in obj.items():
+    if k == target_key:
+      return v
+    elif isinstance(v, dict):
+      return find_val(v, target_key)
+  return None
+
+
 def main(params):
   doc, config = read_params(params)
   max_length = get_max_length(config)
   reqs = get_req_set(doc)
+
+  '''
   for req in reqs:
     gen = RequestGenerator(req)
     gen.set_parameter('id', 3)
@@ -30,6 +41,43 @@ def main(params):
     gen.set_parameter('checksum', '7bf7122c277c5c519267')
     ret = gen.execute()
     print (ret)
+  '''
+
+  seqSet = [
+    (reqs[1], [('body', 'Hello World!')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World!')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 2')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 3')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 4')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 5')]),
+    (reqs[3], [('id', None)])
+  ]
+
+  from json import loads as json_decode
+  context = {'id': None, 'checksum': None}
+  for req in seqSet:
+    g = RequestGenerator(req[0])
+    for key, val in req[1]:
+      if val == None:
+        val = context[key]
+      g.set_parameter(key, val)
+    code, body = g.execute()
+    print(code, body)
+    body_obj = json_decode(body)
+
+    for key in context:
+      x = find_val(body_obj, key)
+      if x != None:
+        context[key] = x
+
+
+
+
 
   return
   # REST-ler method
