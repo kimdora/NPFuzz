@@ -18,14 +18,15 @@ class SwaggerParser():
       for j in method:
         resp = self.get_method_response(j)
         param, path_param, dependency = self.get_method_param(j)
-        produces = self.get_produce(j)
+        #produces = self.get_produces(j)
         request["host"] = self.get_host()
         request["basePath"] = self.get_base_path()
         request["schemes"] = self.get_schemes()
         request["path"] = i
         request["method"] = j
         request["consumes"] =  self.get_consumes(j)
-        request["contentType"] = produces
+        request["produces"] =  self.get_produces(j)
+        #request["contentType"] = produces
         request["parameter"] = param
         request["pathParam"] = path_param
         request["response"] = resp
@@ -143,7 +144,7 @@ class SwaggerParser():
       return None
     return path[method]["consumes"]
 
-  def get_produce(self, method):
+  def get_produces(self, method):
     path = self.datalist[method]
     if "produces" not in path[method]:
       return None

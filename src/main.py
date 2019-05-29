@@ -2,11 +2,11 @@ import argparse
 import yaml
 
 from restler import *
-from request.generator import Generator
+from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
 from utils.config_utils import *
 from utils.yaml_utils import read_yaml_file
-
+from utils.common import error, TerminateException
 
 def get_req_set(doc):
   parser = SwaggerParser(doc)
@@ -16,19 +16,22 @@ def read_params(params):
   doc,    errno1 = read_yaml_file(params.target)
   config, errno2 = read_yaml_file(params.config)
   if errno1 == -1 or errno2 == -1:
-    print("[*] Program exits...")
-    exit(0)
+    error("[*] Program exits...")
   return doc, config
 
 def main(params):
   doc, config = read_params(params)
   max_length = get_max_length(config)
-  req_set = get_req_set(doc)
-  for i in req_set:
-    generator = Generator(i)
-    ret = generator.get_message()
+  reqs = get_req_set(doc)
+  for req in reqs:
+    gen = RequestGenerator(req)
+    gen.set_parameter('id', 3)
+    gen.set_parameter('body', 'Hello World!')
+    gen.set_parameter('checksum', '7bf7122c277c5c519267')
+    ret = gen.execute()
     print (ret)
 
+  return
   # REST-ler method
   n = 1
   bfs = BFS(req_set)
@@ -63,4 +66,11 @@ if __name__ == '__main__':
                                   help='swagger yaml file of target')
   parser.add_argument('--config', required=True, metavar='config.yaml',
                                   help='configuration file')
-  exit(main(parser.parse_args()))
+  try:
+    main(parser.parse_args())
+  except TerminateException as e:
+    print('\033[1;31m' + str(e.message) + '\033[0;0m')
+    exit()
+  except Exception as e:
+    print("UNHANDLED EXCEPTION OCCUR")
+    print(e)
