@@ -31,5 +31,6 @@ class Request:
     for req in seq:
       for k, v in (req.get_response_of()).items():
         if k >= 200 and k < 300: # http status code is 2XX
-          dynamic_objects.add(v)
+          for i in v.keys():
+            dynamic_objects.add(i)
     return dynamic_objects
