@@ -29,8 +29,8 @@ class SwaggerParser():
         request["response"] = resp
         request["dependency"] = dependency
         req_set.append(Request(request))
-    for i in req_set:
-      print (i.dependency)
+    #for i in req_set:
+    #  print (i.dependency)
     return req_set
 
   def get_base_path(self):
