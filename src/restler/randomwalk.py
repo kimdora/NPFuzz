@@ -1,6 +1,6 @@
 import random
 
-class BFS:
+class RandomWalk:
   def __init__(self, req_set):
     self.seq_set = []
     self.req_set = req_set
