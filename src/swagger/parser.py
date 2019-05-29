@@ -95,7 +95,8 @@ class SwaggerParser():
     ret = ""
     # type, schema->type, schema->ref, schema->type * (item -> ref), ...
     if "type" in param_data:
-      ret = param_data["type"]
+      if param_data["type"] != "object":
+        ret = param_data["type"]
     if "schema" in param_data:
       schema = self.extract_type(param_data["schema"])
       ret = self.add_type(ret, schema)
