@@ -4,10 +4,10 @@ from request.request import Request
 # integer, string, array, boolean
 
 class SwaggerParser():
-  datalist = {}
-  pre_def = {}
-  def __init__(self, f_name):
-    self.doc = yaml.safe_load(open(f_name, "r"))
+  def __init__(self, doc):
+    self.doc = doc
+    self.datalist = {}
+    self.pre_def = {}
 
   def get_req_set(self):
     req_set = []
