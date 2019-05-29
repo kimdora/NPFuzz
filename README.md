@@ -8,5 +8,5 @@ $ pip install -r requirements.txt
 
 ## Usage
 ```
-$ python main.py --swagger swagger.yaml --config config.yaml
+$ python main.py --target swagger.yaml --config config.yaml
 ```
