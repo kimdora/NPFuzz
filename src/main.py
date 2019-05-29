@@ -2,6 +2,7 @@ import argparse
 import yaml
 
 from restler import *
+from request.generator import Generator
 from swagger.parser import SwaggerParser
 from utils.config_utils import *
 from utils.yaml_utils import read_yaml_file
@@ -23,6 +24,10 @@ def main(params):
   doc, config = read_params(params)
   max_length = get_max_length(config)
   req_set = get_req_set(doc)
+  for i in req_set:
+    generator = Generator(i)
+    ret = generator.get_message()
+    print (ret)
 
   # REST-ler method
   n = 1

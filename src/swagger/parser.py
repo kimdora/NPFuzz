@@ -19,19 +19,24 @@ class SwaggerParser():
         resp = self.get_method_response(j)
         param, path_param, dependency = self.get_method_param(j)
         produces = self.get_produce(j)
+        request["host"] = self.get_host()
         request["basePath"] = self.get_base_path()
         request["schemes"] = self.get_schemes()
         request["path"] = i
         request["method"] = j
+        request["consumes"] =  self.get_consumes(j)
         request["contentType"] = produces
         request["parameter"] = param
         request["pathParam"] = path_param
         request["response"] = resp
         request["dependency"] = dependency
         req_set.append(Request(request))
-    #for i in req_set:
-    #  print (i.dependency)
+    # for i in req_set:
+    #   print (i.req_param)
     return req_set
+
+  def get_host(self):
+    return self.doc["host"]
 
   def get_base_path(self):
     return self.doc["basePath"] # String
@@ -131,6 +136,12 @@ class SwaggerParser():
     #  any_of = self.extract_type(param_data["anyOf"])
     #  ret = self.add_type(ret, any_of)
     return ret
+
+  def get_consumes(self, method):
+    path = self.datalist[method]
+    if "consumes" not in path[method]:
+      return None
+    return path[method]["consumes"]
 
   def get_produce(self, method):
     path = self.datalist[method]
