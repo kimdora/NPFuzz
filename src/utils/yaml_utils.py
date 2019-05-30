@@ -1,4 +1,5 @@
 import yaml
+from .common import error
 
 def read_yaml_file(filename):
   try:

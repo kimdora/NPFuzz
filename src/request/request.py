@@ -1,10 +1,16 @@
+import re
+import ast
+
 class Request:
   def __init__(self, request):
+    self.host = request["host"]
     self.base_path = request["basePath"]
     self.path = request["path"]
     self.schemes = request["schemes"]
     self.method = request["method"]
-    self.content_type = request["contentType"]
+    self.consumes = request["consumes"]
+    self.produces = request["produces"]
+    #self.content_type = request["contentType"]
     self.parameter = request["parameter"]
     self.req_param = request["pathParam"]
     self.response = request["response"]
@@ -31,6 +37,7 @@ class Request:
     for req in seq:
       for k, v in (req.get_response_of()).items():
         if k >= 200 and k < 300: # http status code is 2XX
+          v = ast.literal_eval(re.sub("object\*", '', v))
           for i in v.keys():
             dynamic_objects.add(i)
     return dynamic_objects
