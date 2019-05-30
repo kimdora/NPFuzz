@@ -2,10 +2,11 @@ import argparse
 import yaml
 
 from restler import *
+from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
 from utils.config_utils import *
 from utils.yaml_utils import read_yaml_file
-
+from utils.common import error, TerminateException
 
 def get_req_set(doc):
   parser = SwaggerParser(doc)
@@ -15,15 +16,70 @@ def read_params(params):
   doc,    errno1 = read_yaml_file(params.target)
   config, errno2 = read_yaml_file(params.config)
   if errno1 == -1 or errno2 == -1:
-    print("[*] Program exits...")
-    exit(0)
+    error("[*] Program exits...")
   return doc, config
+
+def find_val(obj, target_key):
+  for k, v in obj.items():
+    if k == target_key:
+      return v
+    elif isinstance(v, dict):
+      return find_val(v, target_key)
+  return None
+
 
 def main(params):
   doc, config = read_params(params)
   max_length = get_max_length(config)
-  req_set = get_req_set(doc)
+  reqs = get_req_set(doc)
 
+  '''
+  for req in reqs:
+    gen = RequestGenerator(req)
+    gen.set_parameter('id', 3)
+    gen.set_parameter('body', 'Hello World!')
+    gen.set_parameter('checksum', '7bf7122c277c5c519267')
+    ret = gen.execute()
+    print (ret)
+  '''
+
+  seqSet = [
+    (reqs[1], [('body', 'Hello World!')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World!')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 2')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 3')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 4')]),
+    (reqs[3], [('id', None)]),
+    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 5')]),
+    (reqs[3], [('id', None)])
+  ]
+
+  from json import loads as json_decode
+  context = {'id': None, 'checksum': None}
+  for req in seqSet:
+    g = RequestGenerator(req[0])
+    for key, val in req[1]:
+      if val == None:
+        val = context[key]
+      g.set_parameter(key, val)
+    code, body = g.execute()
+    print(code, body)
+    body_obj = json_decode(body)
+
+    for key in context:
+      x = find_val(body_obj, key)
+      if x != None:
+        context[key] = x
+
+
+
+
+
+  return
   # REST-ler method
   n = 1
   bfs = BFS(req_set)
@@ -58,4 +114,11 @@ if __name__ == '__main__':
                                   help='swagger yaml file of target')
   parser.add_argument('--config', required=True, metavar='config.yaml',
                                   help='configuration file')
-  exit(main(parser.parse_args()))
+  try:
+    main(parser.parse_args())
+  except TerminateException as e:
+    print('\033[1;31m' + str(e.message) + '\033[0;0m')
+    exit()
+  except Exception as e:
+    print("UNHANDLED EXCEPTION OCCUR")
+    print(e)

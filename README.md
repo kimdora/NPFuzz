@@ -1,9 +1,12 @@
 # NPFuzz
 
-Dependencies
-------------
-
-For using SwaggerParser, follow below command.
+## Install Dependency
+This program is written by python 3.
 ```
-pip install pyyaml
+$ pip install -r requirements.txt
+```
+
+## Usage
+```
+$ python main.py --target swagger.yaml --config config.yaml
 ```
