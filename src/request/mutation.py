@@ -87,16 +87,17 @@ class Mutation:
     return value
 
   def mutate(self):
-    ret = [[]]
-#    for seq in self.seq_set:
+    seq_set = []
     for seq in range(0,len(self.seq_set)):
+      sequence = []
       for req in self.seq_set[seq]:
         request = copy.deepcopy(req)
         param = self.remove_param_object(request.parameter)
         req_param = self.remove_path_object(request.req_param)
-        print (param, req_param)
         request.parameter = self.mutate_param(param)
         request.req_param, path = self.mutate_path(req_param, request.path)
-        print (request.parameter, request.req_param, path)
+        sequence.append(request)
+      seq_set.append(sequence)
+    return seq_set
 
 
