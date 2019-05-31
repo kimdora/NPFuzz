@@ -2,6 +2,7 @@ import argparse
 import yaml
 
 from restler import *
+from request.mutation import Mutation
 from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
 from utils.config_utils import *
@@ -42,22 +43,15 @@ def main(params):
     ret = gen.execute()
     print (ret)
   '''
-
-  seqSet = [
-    (reqs[1], [('body', 'Hello World!')]),
-    (reqs[3], [('id', None)]),
-    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World!')]),
-    (reqs[3], [('id', None)]),
-    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 2')]),
-    (reqs[3], [('id', None)]),
-    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 3')]),
-    (reqs[3], [('id', None)]),
-    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 4')]),
-    (reqs[3], [('id', None)]),
-    (reqs[4], [('id', None), ('checksum', None), ('body', 'Hello World! 5')]),
-    (reqs[3], [('id', None)])
+  seq_set = [
+    [reqs[1], reqs[2]],
+    [reqs[1], reqs[3]],
+    [reqs[1], reqs[4]]
   ]
+  mutation = Mutation(seq_set)
+  mutation.mutate()
 
+'''
   from json import loads as json_decode
   context = {'id': None, 'checksum': None}
   for req in seqSet:
@@ -74,6 +68,7 @@ def main(params):
       x = find_val(body_obj, key)
       if x != None:
         context[key] = x
+'''
 
 
 
