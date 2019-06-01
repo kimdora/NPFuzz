@@ -3,7 +3,7 @@ import re
 import string
 import copy
 from ast import literal_eval
-from .request import Request
+from request.request import Request
 
 class Mutation:
 
