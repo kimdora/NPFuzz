@@ -1,17 +1,42 @@
-def make_graph(req_set):
+def make_graph(req_set, max_len):
   starts = [req for req in req_set if req.has_dependencies_with([])]
+  g = {}
   graph = {}
-  # starts = [[1], [2]]
-  # {2: [3, 4], 3: [5]}
-  for s in starts:
-    for req in req_set:
-      if s != req and req.has_dependencies_with([s]):
-        if not s in graph:
-          graph[s] = [req]
+  consumes = {}
+  produces = {}
+  d = {}
+  for req in req_set:
+    consumes[req] = list(req.consume())
+    produces[req] = list(req.produce([req]))
+
+  for k, v in produces.items():
+    for e in v:
+      if not e in d:
+        d[e] = [k]
+      else:
+        d[e].append(k)
+
+  for req in req_set:
+    for c in consumes[req]:
+      for e in d[c]:
+        if not req in g:
+          g[req] = [e]
         else:
-          graph[s].append(req)
+          g[req].append(e)
+
+  for k, v in g.items():
+    if len(v) == 1:
+      if not v[0] in graph:
+        graph[v[0]] = [k]
+      else:
+        graph[v[0]].append(k)
+    else:
+      for e in v:
+        if not e in graph:
+          graph[e] = [k]
 
   return starts, graph
+
 
 def dfs(visited, graph, s, stack, seq_set):
   if not s in graph:
@@ -30,11 +55,9 @@ def dfs(visited, graph, s, stack, seq_set):
       stack.pop()
   return seq_set
 
-def make_sequence_set(req_set):
-  starts, graph = make_graph(req_set)
+def make_sequence_set(req_set, max_len):
+  starts, graph = make_graph(req_set, max_len)
 
-  #starts  = [[1], [2]]
-  #graph   = {2: [3, 4], 3: [5]}
   seq_set = []
   for s in starts:
     seq_set.append([s])

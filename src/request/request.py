@@ -10,11 +10,13 @@ class Request:
     self.method = request["method"]
     self.consumes = request["consumes"]
     self.produces = request["produces"]
-    #self.content_type = request["contentType"]
     self.parameter = request["parameter"]
     self.req_param = request["pathParam"]
     self.response = request["response"]
     self.dependency = request["dependency"]
+
+  def print_pretty(self):
+    return self.method + " " + self.path
 
   def get_response_of(self):
     return self.response
@@ -23,22 +25,26 @@ class Request:
     return self.consume().issubset(self.produce(seq))
 
   def consume(self):
-    # TODO!
-    res = set()
-    if self.method == "POST":
-      return set()
-    for k in self.req_param.keys():
-      res.add(k)
-    return res
+    ret = set()
+    if self.method == 'post':
+      pass
+    else:
+      for k in self.dependency.keys():
+        ret.add(k)
+    #print("consumes are ", ret)
+    return ret
 
   def produce(self, seq):
     # TODO!
     dynamic_objects = set()
-    #print(seq)
     for req in seq:
-      for k, v in (req.get_response_of()).items():
-        if k >= 200 and k < 300: # http status code is 2XX
-          v = ast.literal_eval(re.sub("object\*", '', v))
-          for i in v.keys():
-            dynamic_objects.add(i)
+      for k1, v1 in (req.get_response_of()).items():
+        if k1 >= 200 and k1 < 300:  # http status code is 2XX
+          v1 = ast.literal_eval(re.sub('object\*', '', v1))
+          for k2, v2 in v1.items():
+            dynamic_objects.add(k2)
+            if v2[0] == '{' and type(eval(v2)) == dict:
+              for k3 in eval(v2).keys():
+                dynamic_objects.add(k3)
+    #print("produces are ", dynamic_objects)
     return dynamic_objects
