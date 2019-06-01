@@ -2,7 +2,8 @@ import argparse
 import yaml
 
 from npfuzz.dependency import make_sequence_set
-from request.mutation import Mutation
+from npfuzz.mutation import Mutation
+from npfuzz.fuzz import Fuzzing
 from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
 from utils.yaml_utils import *
@@ -39,11 +40,30 @@ def main(params):
 
   print('[*] Making request sequences set from inferring dependency...')
   seq_set = make_sequence_set(req_set, max_length)
+
+  '''
   print(seq_set)
+  for seq in seq_set:
+    for req in (seq):
+      print (req.parameter)
+      print (req.req_param)
+      print (req.path)
 
   mutation = Mutation(seq_set)
-  mutation.mutate()
-  print(seq_set)
+  x = mutation.mutate()
+  print(x)
+  for seq in x:
+    print ('=' * 80)
+    for req in (seq):
+      print ('-' * 80)
+      print (req.method, req.host, req.base_path, req.path)
+      print (req.parameter)
+      print (req.req_param)
+      print (req.path)
+  '''
+  f = Fuzzing()
+  f.execute(seq_set)
+
   print ("Finish")
   """
 
