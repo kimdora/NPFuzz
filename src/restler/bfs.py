@@ -31,3 +31,16 @@ class BFS:
       self.seq_set.append(e)
 
     return self.seq_set
+
+if __name__ == '__main__':
+  # REST-ler method
+  n = 1
+  bfs = BFS(req_set)
+  #bfsfast = BFSFast(req_set)
+  #randomwalk = RandomWalk(req_set)
+
+  while n <= max_length:
+    seq_set = bfs.search(n)
+    print(seq_set)
+    #seq_set = render(seq_set, seq_set)
+    n = n + 1

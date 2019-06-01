@@ -2,17 +2,12 @@ import argparse
 import yaml
 
 from npfuzz.dependency import make_sequence_set
-from restler import *
 from request.mutation import Mutation
 from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
-from utils.config_utils import *
-from utils.yaml_utils import read_yaml_file
+from utils.yaml_utils import *
 from utils.common import error, TerminateException
 
-def get_req_set(doc):
-  parser = SwaggerParser(doc)
-  return parser.get_req_set()
 
 def read_params(params):
   doc,    errno1 = read_yaml_file(params.target)
@@ -20,6 +15,10 @@ def read_params(params):
   if errno1 == -1 or errno2 == -1:
     error("[*] Program exits...")
   return doc, config
+
+def get_request_set(doc):
+  parser = SwaggerParser(doc)
+  return parser.get_req_set()
 
 def find_val(obj, target_key):
   for k, v in obj.items():
@@ -31,25 +30,22 @@ def find_val(obj, target_key):
 
 
 def main(params):
+  print('[*] Reading parameters for SwagFuzz...')
   doc, config = read_params(params)
   max_length = get_max_length(config)
-  req_set = get_req_set(doc)
-  seq_set = make_sequence_set(req_set)
-  #print(seq_set)
 
+  print('[*] Getting request set from swagger...')
+  req_set = get_request_set(doc)
 
+  print('[*] Making request sequences set from inferring dependency...')
+  seq_set = make_sequence_set(req_set, max_length)
+  print(seq_set)
+
+  mutation = Mutation(seq_set)
+  mutation.mutate()
+  print(seq_set)
+  print ("Finish")
   """
-  # REST-ler method
-  n = 1
-  bfs = BFS(req_set)
-  #bfsfast = BFSFast(req_set)
-  #randomwalk = RandomWalk(req_set)
-
-  while n <= max_length:
-    seq_set = bfs.search(n)
-    print(seq_set)
-    #seq_set = render(seq_set, seq_set)
-    n = n + 1
 
   for req in reqs:
     gen = RequestGenerator(req)
@@ -64,9 +60,7 @@ def main(params):
     [reqs[1], reqs[3]],
     [reqs[1], reqs[4]]
   ]
-  mutation = Mutation(seq_set)
-  mutation.mutate()
-  print ("Finish")
+
 
   from json import loads as json_decode
   context = {'id': None, 'checksum': None}

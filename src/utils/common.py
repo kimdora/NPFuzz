@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 class TerminateException(Exception):
   def __init__(self, message):
     self.message = message
