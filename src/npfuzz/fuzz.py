@@ -56,6 +56,9 @@ class Fuzzing:
     gen = RequestGenerator(req)
     for key, val in parameters:
       gen.set_parameter(key, val)
+    for key, val in self.context:
+      if key not in parameters:
+        gen.set_parameter(key, val)
     response_code, content = gen.execute()
     return (response_code, content)
 
