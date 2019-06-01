@@ -1,6 +1,7 @@
 import argparse
 import yaml
 
+from npfuzz.dependency import make_sequence_set
 from restler import *
 from request.mutation import Mutation
 from request.generator import RequestGenerator
@@ -32,9 +33,24 @@ def find_val(obj, target_key):
 def main(params):
   doc, config = read_params(params)
   max_length = get_max_length(config)
-  reqs = get_req_set(doc)
+  req_set = get_req_set(doc)
+  seq_set = make_sequence_set(req_set)
+  #print(seq_set)
 
-  '''
+
+  """
+  # REST-ler method
+  n = 1
+  bfs = BFS(req_set)
+  #bfsfast = BFSFast(req_set)
+  #randomwalk = RandomWalk(req_set)
+
+  while n <= max_length:
+    seq_set = bfs.search(n)
+    print(seq_set)
+    #seq_set = render(seq_set, seq_set)
+    n = n + 1
+
   for req in reqs:
     gen = RequestGenerator(req)
     gen.set_parameter('id', 3)
@@ -42,7 +58,7 @@ def main(params):
     gen.set_parameter('checksum', '7bf7122c277c5c519267')
     ret = gen.execute()
     print (ret)
-  '''
+
   seq_set = [
     [reqs[1], reqs[2]],
     [reqs[1], reqs[3]],
@@ -52,7 +68,6 @@ def main(params):
   mutation.mutate()
   print ("Finish")
 
-'''
   from json import loads as json_decode
   context = {'id': None, 'checksum': None}
   for req in seqSet:
@@ -73,19 +88,9 @@ def main(params):
 
 
 
-
+"""
   return
-  # REST-ler method
-  n = 1
-  bfs = BFS(req_set)
-  #bfsfast = BFSFast(req_set)
-  #randomwalk = RandomWalk(req_set)
 
-  while n <= max_length:
-    seq_set = bfs.search(n)
-    #seq_set = render(seq_set, seq_set)
-    n = n + 1
-'''
 
 
 if __name__ == '__main__':

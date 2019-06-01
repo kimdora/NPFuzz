@@ -34,6 +34,7 @@ class Request:
   def produce(self, seq):
     # TODO!
     dynamic_objects = set()
+    #print(seq)
     for req in seq:
       for k, v in (req.get_response_of()).items():
         if k >= 200 and k < 300: # http status code is 2XX
