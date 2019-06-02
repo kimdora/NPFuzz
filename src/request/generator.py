@@ -5,6 +5,9 @@ import random
 from json import dumps as jsonify
 from dict2xml import dict2xml as xmlify
 
+class ParameterNotFilled(Exception):
+  pass
+
 class RequestGenerator:
   def __init__(self, request):
     self.method = None
@@ -46,7 +49,7 @@ class RequestGenerator:
         for x in req_param:
           self.param_path[x] = [req_param[x], None]
       else:
-        raise TerminateException('Not Implement')
+        raise NotImplementedError('path parameter parsing')
 
     if 'require' in request.parameter:
       require = request.parameter['require']
@@ -56,12 +59,13 @@ class RequestGenerator:
           for x in obj:
             self.param_body[x] = [obj[x], None]
         else:
-          raise TerminateException('Not Implement')
+          raise NotImplementedError('parameter require parsing')
 
   def has_empty_parameter(self):
     for i in [self.param_path, self.param_body]:
       for j in i:
         if i[j][1] == None:
+          print(j, i[j])
           return False
     return True
 
@@ -101,11 +105,11 @@ class RequestGenerator:
     elif self.content_type == 'application/xml':
       return xmlify(body, newlines=False)
     else:
-      raise TerminateException('unhandlable content-type')
+      raise NotImplementedError('unhandlable content-type')
 
   def execute(self):
     if not self.has_empty_parameter():
-      raise TerminateException('parameter not filled')
+      raise ParameterNotFilled()
     r = None
     _url = self.get_url()
     _headers = self.headers
@@ -119,4 +123,4 @@ class RequestGenerator:
       r = requests.put(_url, headers=_headers, data=_body)
     elif self.method == 'delete':
       r = requests.delete(_url, headers=_headers)
-    return r.status_code, r.content # is there any response object?
+    return r.status_code, r.headers, r.content # is there any response object?
