@@ -41,71 +41,25 @@ def main(params):
   print('[*] Making request sequences set from inferring dependency...')
   seq_set = make_sequence_set(req_set, max_length)
 
-  '''
-  print(seq_set)
+  '''  
+  print(("=" * 40)+'req_set')
+  for req in req_set:
+    print (req.method, req.host, req.base_path, req.path)
+    print('parameter', req.parameter)
+    print('parameter', req.req_param)
+    print('parameter', req.response)
+    #print('parameter', req.parameter)
+    print('-' * 80)
+  print(("=" * 40)+'seq_set')
   for seq in seq_set:
     for req in (seq):
-      print (req.parameter)
-      print (req.req_param)
-      print (req.path)
-
-  mutation = Mutation(seq_set)
-  x = mutation.mutate()
-  print(x)
-  for seq in x:
-    print ('=' * 80)
-    for req in (seq):
-      print ('-' * 80)
       print (req.method, req.host, req.base_path, req.path)
-      print (req.parameter)
-      print (req.req_param)
-      print (req.path)
+    print('-' * 80)
   '''
   f = Fuzzing()
   f.execute(seq_set)
 
   print ("Finish")
-  """
-
-  for req in reqs:
-    gen = RequestGenerator(req)
-    gen.set_parameter('id', 3)
-    gen.set_parameter('body', 'Hello World!')
-    gen.set_parameter('checksum', '7bf7122c277c5c519267')
-    ret = gen.execute()
-    print (ret)
-
-  seq_set = [
-    [reqs[1], reqs[2]],
-    [reqs[1], reqs[3]],
-    [reqs[1], reqs[4]]
-  ]
-
-
-  from json import loads as json_decode
-  context = {'id': None, 'checksum': None}
-  for req in seqSet:
-    g = RequestGenerator(req[0])
-    for key, val in req[1]:
-      if val == None:
-        val = context[key]
-      g.set_parameter(key, val)
-    code, body = g.execute()
-    print(code, body)
-    body_obj = json_decode(body)
-
-    for key in context:
-      x = find_val(body_obj, key)
-      if x != None:
-        context[key] = x
-
-
-
-
-"""
-  return
-
-
 
 if __name__ == '__main__':
   """ Welcome to "NP Fuzz" which is a REST API Fuzzing with State Diversity.

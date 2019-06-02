@@ -5,6 +5,8 @@ from utils.common import TerminateException, ForceStopNLog
 from .mutation import Mutation
 from pyxml2dict import XML2Dict
 from json import loads as json_decode
+import random
+from sys import float_info
 
 def find_val(obj, target_key):
   for k, v in obj.items():
@@ -27,7 +29,7 @@ class Fuzzing:
 
   def _init_context(self):
     self.context = {}
-    self.independent_item = []
+    self.independent_item = {}
     self.executed_request_count = 0
 
   def execute(self, seqSet):
@@ -62,7 +64,7 @@ class Fuzzing:
       for category in body:
         for item in body[category]:
           if req.method == 'post':
-            self.independent_item.append(item)
+            self.independent_item.update(body[category])
           else:
             self.context.update({item: [body[category][item], None]})
   
@@ -76,6 +78,33 @@ class Fuzzing:
         self.context[key][1] = val
     print ('obj', obj)
     print ('ctx', self.context)
+
+  def _get_random_value(self, _type):
+    t = Mutation([])
+    if _type == 'string':
+      i = random.randrange(0, 2)
+      if i == 0: val = ''
+      elif i == 1: val = t.random_string()
+      elif i == 2: val = '' # TODO: ...
+    elif _type == 'integer':
+      i = random.randrange(0, 5)
+      if i == 0: val = 0
+      elif i == 1: val = random.randragne(1, t.int_max_len[1] - 1)
+      elif i == 2: val = random.randragne(t.int_max_len[0] + 1, -1)
+      elif i == 3: val = t.int_max_len[1]
+      elif i == 4: val = t.int_max_len[0]
+    elif _type == 'float':
+      i = random.randrange(0, 5)
+      if i == 0: val = 0.0
+      elif i == 1: val = random.random()
+      elif i == 2: val = -random.random()
+      elif i == 3: val = float_info.max
+      elif i == 4: val = float_info.min
+    elif _type == 'boolean':
+      val = bool(random.randrange(0, 2))
+    elif _type == 'array':
+      val = [] # TODO: should put the items
+    return val
 
   def _request(self, req, parameters=None):
     if not isinstance(req, Request):
@@ -91,8 +120,8 @@ class Fuzzing:
 
     for key in self.independent_item:
       if key not in parameters:
-        # TODO: get random value with type
-        gen.set_parameter(key, '1234')
+        val = self._get_random_value(self.independent_item[key])
+        gen.set_parameter(key, val)
     for key in self.context:
       val = self.context[key][1]
       if key not in parameters:
