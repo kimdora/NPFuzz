@@ -41,47 +41,13 @@ def main(params):
   print('[*] Making request sequences set from inferring dependency...')
   seq_set = make_sequence_set(req_set, max_length)
 
-  '''
-  print(seq_set)
-  for seq in seq_set:
-    for req in (seq):
-      print (req.parameter)
-      print (req.req_param)
-      print (req.path)
-
-  mutation = Mutation(seq_set)
-  x = mutation.mutate()
-  print(x)
-  for seq in x:
-    print ('=' * 80)
-    for req in (seq):
-      print ('-' * 80)
-      print (req.method, req.host, req.base_path, req.path)
-      print (req.parameter)
-      print (req.req_param)
-      print (req.path)
-  '''
   f = Fuzzing()
   f.execute(seq_set)
 
   print ("Finish")
-  """
+  return
 
-  for req in reqs:
-    gen = RequestGenerator(req)
-    gen.set_parameter('id', 3)
-    gen.set_parameter('body', 'Hello World!')
-    gen.set_parameter('checksum', '7bf7122c277c5c519267')
-    ret = gen.execute()
-    print (ret)
-
-  seq_set = [
-    [reqs[1], reqs[2]],
-    [reqs[1], reqs[3]],
-    [reqs[1], reqs[4]]
-  ]
-
-
+'''
   from json import loads as json_decode
   context = {'id': None, 'checksum': None}
   for req in seqSet:
@@ -98,12 +64,7 @@ def main(params):
       x = find_val(body_obj, key)
       if x != None:
         context[key] = x
-
-
-
-
-"""
-  return
+'''
 
 
 
