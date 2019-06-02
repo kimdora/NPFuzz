@@ -41,31 +41,11 @@ def main(params):
   print('[*] Making request sequences set from inferring dependency...')
   seq_set = make_sequence_set(req_set, max_length)
 
+
   f = Fuzzing()
   f.execute(seq_set)
 
   print ("Finish")
-  return
-
-'''
-  from json import loads as json_decode
-  context = {'id': None, 'checksum': None}
-  for req in seqSet:
-    g = RequestGenerator(req[0])
-    for key, val in req[1]:
-      if val == None:
-        val = context[key]
-      g.set_parameter(key, val)
-    code, body = g.execute()
-    print(code, body)
-    body_obj = json_decode(body)
-
-    for key in context:
-      x = find_val(body_obj, key)
-      if x != None:
-        context[key] = x
-'''
-
 
 
 if __name__ == '__main__':
