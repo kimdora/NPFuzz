@@ -65,7 +65,6 @@ class RequestGenerator:
     for i in [self.param_path, self.param_body]:
       for j in i:
         if i[j][1] == None:
-          print(j, i[j])
           return False
     return True
 
