@@ -8,6 +8,8 @@ from json import loads as json_decode
 import random
 from sys import float_info
 import pickle
+from datetime import datetime
+from shutil import copyfile
 
 def find_val(obj, target_key):
   for k, v in obj.items():
@@ -19,21 +21,32 @@ def find_val(obj, target_key):
 
 class Fuzzing:
   def __init__(self):
-    self.db = sqlite3_open('result.db')
+    self.db = self._init_db()
     self.context = None
     self.indepenent_item = None
     self.executed_request_count = None
     self.final_status_code = None
     self.request_parameters = None
 
+  def _init_db(self):
+    fname = 'result_{}.db'.format(str(datetime.utcnow()).replace(' ', '_'))
+    copyfile('result_empty.db', fname)
+    return sqlite3_open(fname)
+
   def _log(self, req_set):
-    print('\033[1;31m')
-    print(pickle.dumps(req_set))
-    print(pickle.dumps(self.context))
-    print(self.last_status_code)
-    print(pickle.dumps(self.request_parameters))
-    print(self.executed_request_count)
-    print('\033[0;0m')
+    #print('\033[1;31m')
+    req_set = pickle.dumps(req_set)
+    context = pickle.dumps(self.context)
+    status = self.last_status_code
+    req_param = pickle.dumps(self.request_parameters)
+    req_cnt =self.executed_request_count
+    #print('\033[0;0m')
+    try:
+      cur = self.db.cursor()
+      cur.execute('INSERT INTO fuzzing_log (status, req_set, req_param, req_cnt, context) VALUES(?, ?, ?, ?, ?)', (status, req_set , req_param, req_cnt, context))
+      self.db.commit()
+    except:
+      raise TerminateException('db error')
 
   def _init_context(self):
     self.context = {}
@@ -62,7 +75,7 @@ class Fuzzing:
         print("ForceStop", e.message)
       finally:
         self._log(seq)
-      print('-' * 80)
+      #print('-' * 80)
 
   def _infer_context_parameter(self, req_set):
     callback_i = lambda x: self.independent_item.update(x)
