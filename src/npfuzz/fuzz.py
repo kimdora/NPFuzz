@@ -1,12 +1,13 @@
 from sqlite3 import connect as sqlite3_open
 from request.generator import RequestGenerator, ParameterNotFilled
 from request.request import Request
-from utils.common import TerminateException, ForceStopNLog
+from utils.common import TerminateException, ForceStop
 from .mutation import Mutation
 from pyxml2dict import XML2Dict
 from json import loads as json_decode
 import random
 from sys import float_info
+import pickle
 
 def find_val(obj, target_key):
   for k, v in obj.items():
@@ -16,21 +17,30 @@ def find_val(obj, target_key):
       return find_val(v, target_key)
   return None
 
-
 class Fuzzing:
   def __init__(self):
     self.db = sqlite3_open('result.db')
     self.context = None
     self.indepenent_item = None
     self.executed_request_count = None
+    self.final_status_code = None
+    self.request_parameters = None
 
-  def _log(self, seq, result):
-    pass
+  def _log(self, req_set):
+    print('\033[1;31m')
+    print(pickle.dumps(req_set))
+    print(pickle.dumps(self.context))
+    print(self.last_status_code)
+    print(pickle.dumps(self.request_parameters))
+    print(self.executed_request_count)
+    print('\033[0;0m')
 
   def _init_context(self):
     self.context = {}
     self.independent_item = {}
     self.executed_request_count = 0
+    self.last_status_code = 0
+    self.request_parameters = []
 
   def execute(self, seqSet):
     if not isinstance(seqSet, list):
@@ -48,8 +58,10 @@ class Fuzzing:
 
         # do mutate      
         self._request_mutation(last_req)
-      except ForceStopNLog as e:
+      except ForceStop as e:
         print("ForceStop", e.message)
+      finally:
+        self._log(seq)
       print('-' * 80)
 
   def _infer_context_parameter(self, req_set):
@@ -88,7 +100,7 @@ class Fuzzing:
     if _type == 'string':
       i = random.randrange(0, 2)
       if i == 0: val = ''
-      elif i == 1: val = t.random_string()
+      elif i == 1: val = t.random_string(20)
       elif i == 2: val = '' # TODO: ...
     elif _type == 'integer':
       i = random.randrange(0, 5)
@@ -134,16 +146,21 @@ class Fuzzing:
       if key not in parameters:
         gen.set_parameter(key, val)
 
+    self.request_parameters.append(gen.get_parameters())
+
     try:
       self.executed_request_count += 1
       response_code, headers, content = gen.execute()
     except ParameterNotFilled:
-      raise ForceStopNLog('Parameter is not filled')
+      raise ForceStop('Parameter is not filled')
+
+    self.last_status_code = response_code
+    if response_code == 500: raise ForceStop('status_code == 500')
 
     if 'content-type' in headers:
       content_type = headers['content-type'] # request's Accept is response's Content-Type
       #if content_type != gen.headers['Accept']:
-      #  raise ForceStopNLog('Response[content-type] and Request[accept] is not match')
+      #  raise ForceStop('Response[content-type] and Request[accept] is not match')
 
       if content_type == 'application/json':
         dat = json_decode(content.decode('utf-8'))
@@ -155,8 +172,9 @@ class Fuzzing:
       else:
         pass
 
-    print (response_code)
-    return (response_code, headers, content)
+    #print (response_code)
+    self.last_status_code = response_code
+    return (headers, content)
 
   def _request_mutation(self, req):
     mutation_target = {}
@@ -186,13 +204,13 @@ class Fuzzing:
             if _name in req.parameter[category][key]:
               req.parameter[category][key] = req.parameter[category][key].replace('\'{}\': \'{}\''.format(_name, _type), '\'{}\': \'{}\''.format(_name, to_type))
         #{'require': {'body': "object*{'body': 'string', 'checksum': 'string'}"}, 'optional': {}}
-        print(_name, _type)
-        print(req.parameter) 
-        print(req.req_param) 
+        #print(_name, _type)
+        #print(req.parameter) 
+        #print(req.req_param) 
       mutation_input.update({_name: self._get_random_value(_type)})
 
-    response_code, headers, content = self._request(req, mutation_input)
-    return response_code, headers, content, 'how it mutated'
+    headers, content = self._request(req, mutation_input)
+    return headers, content, 'how it mutated'
 
 if __name__ == '__main__':
   pass

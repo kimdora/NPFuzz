@@ -4,7 +4,7 @@ import requests
 import random
 from json import dumps as jsonify
 from dict2xml import dict2xml as xmlify
-
+from copy import deepcopy
 class ParameterNotFilled(Exception):
   pass
 
@@ -89,6 +89,11 @@ class RequestGenerator:
         self.param_body[name][1] = val
     else:
       pass
+
+  def get_parameters(self):
+    temp = deepcopy(self.param_path)
+    temp.update(self.param_body)
+    return temp
 
   def get_url(self):
     path = self.path
