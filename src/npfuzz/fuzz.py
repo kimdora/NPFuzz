@@ -67,7 +67,7 @@ class Fuzzing:
 
     for category in body:
       for item in body[category]:
-        if req.method == 'post':
+        if req.method == 'post' and body[category][item] not in self.context:
           callback_i(body[category])
         else:
           callback_c({item: [body[category][item], None]})
@@ -108,6 +108,8 @@ class Fuzzing:
       val = bool(random.randrange(0, 2))
     elif _type == 'array':
       val = [] # TODO: should put the items
+    else:
+      val = None
     return val
 
   def _request(self, req, parameters=None):
@@ -140,8 +142,8 @@ class Fuzzing:
 
     if 'content-type' in headers:
       content_type = headers['content-type'] # request's Accept is response's Content-Type
-      if content_type != gen.headers['Accept']:
-        raise ForceStopNLog('Response[content-type] and Request[accept] is not match')
+      #if content_type != gen.headers['Accept']:
+      #  raise ForceStopNLog('Response[content-type] and Request[accept] is not match')
 
       if content_type == 'application/json':
         dat = json_decode(content.decode('utf-8'))
@@ -158,20 +160,35 @@ class Fuzzing:
 
   def _request_mutation(self, req):
     mutation_target = {}
-    callback_i = lambda x: 0
-    callback_c = lambda x: mutation_target.update({list(x)[0]: x[list(x)[0]][0]})
 
-    self._param_parse(req, callback_i, callback_c)
+    _mutation_type = random.randrange(0, 2)
+    if _mutation_type == 0: # both mutation
+      cb1 = lambda x: mutation_target.update({list(x)[0]: x[list(x)[0]][0]})
+      cb2 = lambda x: mutation_target.update({list(x)[0]: x[list(x)[0]][0]})
+    elif _mutation_type == 1: # indepedent_item mutation
+      cb1 = lambda x: mutation_target.update({list(x)[0]: x[list(x)[0]][0]})
+      cb2 = lambda x: 0
+
+    self._param_parse(req, cb1, cb2)
 
     mutation_input = {}
     for _name in mutation_target:
       _type = mutation_target[_name]
       
-      change_type = bool(random.randrange(0, 2))
-      if change_type:
-        # should replace the change the parmeter of req and _type
-        pass
-      
+      type_change_flag = bool(random.randrange(0, 2))
+      if type_change_flag:
+        candidate_type = ['integer', 'string', 'array', 'float', 'boolean']
+        to_type = random.choice(candidate_type)
+        if _name in req.req_param:
+          req.req_param[_name] = to_type
+        for category in req.parameter:
+          for key in req.parameter[category]:
+            if _name in req.parameter[category][key]:
+              req.parameter[category][key] = req.parameter[category][key].replace('\'{}\': \'{}\''.format(_name, _type), '\'{}\': \'{}\''.format(_name, to_type))
+        #{'require': {'body': "object*{'body': 'string', 'checksum': 'string'}"}, 'optional': {}}
+        print(_name, _type)
+        print(req.parameter) 
+        print(req.req_param) 
       mutation_input.update({_name: self._get_random_value(_type)})
 
     response_code, headers, content = self._request(req, mutation_input)

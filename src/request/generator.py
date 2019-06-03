@@ -45,7 +45,7 @@ class RequestGenerator:
 
     req_param = request.req_param
     for i in request.req_param:
-      if req_param[i][:7] == 'integer':
+      if req_param[i][:5] in ['integ', 'array', 'float', 'strin', 'boole']:
         for x in req_param:
           self.param_path[x] = [req_param[x], None]
       else:
@@ -58,15 +58,19 @@ class RequestGenerator:
           obj = eval(require[i][7:])
           for x in obj:
             self.param_body[x] = [obj[x], None]
+        elif require[i][:5] in ['integ', 'array', 'float', 'strin', 'boole']:
+          for x in require[i]:
+            self.param_body[x] = [require[x], None]
         else:
           raise NotImplementedError('parameter require parsing')
 
   def has_empty_parameter(self):
+    return False
     for i in [self.param_path, self.param_body]:
       for j in i:
         if i[j][1] == None:
-          return False
-    return True
+          return True
+    return False
 
   def check_type(self, type, val):
     if type == 'string':
@@ -107,7 +111,7 @@ class RequestGenerator:
       raise NotImplementedError('unhandlable content-type')
 
   def execute(self):
-    if not self.has_empty_parameter():
+    if self.has_empty_parameter():
       raise ParameterNotFilled()
     r = None
     _url = self.get_url()
