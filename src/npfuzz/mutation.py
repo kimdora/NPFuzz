@@ -3,7 +3,7 @@ import re
 import string
 import copy
 from ast import literal_eval
-from .request import Request
+from request.request import Request
 
 class Mutation:
 
@@ -42,9 +42,10 @@ class Mutation:
       new_path = str(paths[0])[:-1] + str(ret[name]) + str(paths[1])[1:]
     return ret, new_path
 
-  def random_string(self):
+  def random_string(self, size=None):
+    if size == None: size = self.str_max_len
     letters = string.ascii_lowercase
-    length = random.randrange(0, self.str_max_len)
+    length = random.randrange(0, size)
     return ''.join(random.choice(letters) for i in range(length))
 
   def mutate_param(self, parameter):

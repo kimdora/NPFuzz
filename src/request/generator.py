@@ -4,6 +4,9 @@ import requests
 import random
 from json import dumps as jsonify
 from dict2xml import dict2xml as xmlify
+from copy import deepcopy
+class ParameterNotFilled(Exception):
+  pass
 
 class RequestGenerator:
   def __init__(self, request):
@@ -42,11 +45,11 @@ class RequestGenerator:
 
     req_param = request.req_param
     for i in request.req_param:
-      if req_param[i][:7] == 'integer':
+      if req_param[i][:5] in ['integ', 'array', 'float', 'strin', 'boole']:
         for x in req_param:
           self.param_path[x] = [req_param[x], None]
       else:
-        raise TerminateException('Not Implement')
+        raise NotImplementedError('path parameter parsing')
 
     if 'require' in request.parameter:
       require = request.parameter['require']
@@ -55,15 +58,19 @@ class RequestGenerator:
           obj = eval(require[i][7:])
           for x in obj:
             self.param_body[x] = [obj[x], None]
+        elif require[i][:5] in ['integ', 'array', 'float', 'strin', 'boole']:
+          for x in require[i]:
+            self.param_body[x] = [require[x], None]
         else:
-          raise TerminateException('Not Implement')
+          raise NotImplementedError('parameter require parsing')
 
   def has_empty_parameter(self):
+    return False
     for i in [self.param_path, self.param_body]:
       for j in i:
         if i[j][1] == None:
-          return False
-    return True
+          return True
+    return False
 
   def check_type(self, type, val):
     if type == 'string':
@@ -83,6 +90,11 @@ class RequestGenerator:
     else:
       pass
 
+  def get_parameters(self):
+    temp = deepcopy(self.param_path)
+    temp.update(self.param_body)
+    return temp
+
   def get_url(self):
     path = self.path
     for i in self.param_path:
@@ -101,11 +113,11 @@ class RequestGenerator:
     elif self.content_type == 'application/xml':
       return xmlify(body, newlines=False)
     else:
-      raise TerminateException('unhandlable content-type')
+      raise NotImplementedError('unhandlable content-type')
 
   def execute(self):
-    if not self.has_empty_parameter():
-      raise TerminateException('parameter not filled')
+    if self.has_empty_parameter():
+      raise ParameterNotFilled()
     r = None
     _url = self.get_url()
     _headers = self.headers
@@ -119,4 +131,4 @@ class RequestGenerator:
       r = requests.put(_url, headers=_headers, data=_body)
     elif self.method == 'delete':
       r = requests.delete(_url, headers=_headers)
-    return r.status_code, r.content # is there any response object?
+    return r.status_code, r.headers, r.content # is there any response object?

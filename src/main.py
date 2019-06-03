@@ -2,7 +2,8 @@ import argparse
 import yaml
 
 from npfuzz.dependency import make_sequence_set
-from request.mutation import Mutation
+from npfuzz.mutation import Mutation
+from npfuzz.fuzz import Fuzzing
 from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
 from utils.yaml_utils import *
@@ -39,52 +40,12 @@ def main(params):
 
   print('[*] Making request sequences set from inferring dependency...')
   seq_set = make_sequence_set(req_set, max_length)
-  print(seq_set)
 
-  mutation = Mutation(seq_set)
-  mutation.mutate()
-  print(seq_set)
+
+  f = Fuzzing()
+  f.execute(seq_set)
+
   print ("Finish")
-  """
-
-  for req in reqs:
-    gen = RequestGenerator(req)
-    gen.set_parameter('id', 3)
-    gen.set_parameter('body', 'Hello World!')
-    gen.set_parameter('checksum', '7bf7122c277c5c519267')
-    ret = gen.execute()
-    print (ret)
-
-  seq_set = [
-    [reqs[1], reqs[2]],
-    [reqs[1], reqs[3]],
-    [reqs[1], reqs[4]]
-  ]
-
-
-  from json import loads as json_decode
-  context = {'id': None, 'checksum': None}
-  for req in seqSet:
-    g = RequestGenerator(req[0])
-    for key, val in req[1]:
-      if val == None:
-        val = context[key]
-      g.set_parameter(key, val)
-    code, body = g.execute()
-    print(code, body)
-    body_obj = json_decode(body)
-
-    for key in context:
-      x = find_val(body_obj, key)
-      if x != None:
-        context[key] = x
-
-
-
-
-"""
-  return
-
 
 
 if __name__ == '__main__':
