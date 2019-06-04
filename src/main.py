@@ -8,7 +8,7 @@ from request.generator import RequestGenerator
 from swagger.parser import SwaggerParser
 from utils.yaml_utils import *
 from utils.common import error, TerminateException
-
+from traceback import print_exc as print_traceback
 
 def read_params(params):
   doc,    errno1 = read_yaml_file(params.target)
@@ -21,15 +21,6 @@ def get_request_set(doc):
   parser = SwaggerParser(doc)
   return parser.get_req_set()
 
-def find_val(obj, target_key):
-  for k, v in obj.items():
-    if k == target_key:
-      return v
-    elif isinstance(v, dict):
-      return find_val(v, target_key)
-  return None
-
-
 def main(params):
   print('[*] Reading parameters for SwagFuzz...')
   doc, config = read_params(params)
@@ -41,11 +32,11 @@ def main(params):
   print('[*] Making request sequences set from inferring dependency...')
   seq_set = make_sequence_set(req_set, max_length)
 
-
+  print('[*] Start Fuzzing')
   f = Fuzzing()
   f.execute(seq_set)
 
-  print ("Finish")
+  print ("[*] Finish")
 
 
 if __name__ == '__main__':
@@ -67,13 +58,15 @@ if __name__ == '__main__':
                                   help='swagger yaml file of target')
   parser.add_argument('--config', required=True, metavar='config.yaml',
                                   help='configuration file')
-  main(parser.parse_args())
-  '''
+  #main(parser.parse_args())
+  
   try:
+    main(parser.parse_args())
   except TerminateException as e:
     print('\033[1;31m' + str(e.message) + '\033[0;0m')
     exit()
   except Exception as e:
     print("UNHANDLED EXCEPTION OCCUR")
     print(e)
-  '''
+    print_traceback()
+    
