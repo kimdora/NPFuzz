@@ -72,21 +72,23 @@ class RequestGenerator:
           return True
     return False
 
-  def check_type(self, type, val):
-    if type == 'string':
+  def check_type(self, _type, val):
+    if _type == 'string':
       return isinstance(val, str)
-    elif type == 'integer':
+    elif _type == 'integer':
       return isinstance(val, int)
     else:
       return False
 
   def set_parameter(self, name, val):
     if name in self.param_path:
-      if self.check_type(self.param_path[name][0], val):
-        self.param_path[name][1] = val
+      #if self.check_type(self.param_path[name][0], val):
+      #  self.param_path[name][1] = val
+      self.param_path[name][1] = val
     elif name in self.param_body:
-      if self.check_type(self.param_body[name][0], val):
-        self.param_body[name][1] = val
+      #if self.check_type(self.param_body[name][0], val):
+      #  self.param_body[name][1] = val
+      self.param_body[name][1] = val
     else:
       pass
 

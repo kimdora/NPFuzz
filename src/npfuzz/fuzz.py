@@ -35,13 +35,12 @@ class Fuzzing:
     return sqlite3_open(fname)
 
   def _log(self, req_set):
-    #print('\033[1;31m')
     req_set = pickle.dumps(req_set)
     context = pickle.dumps(self.context)
     status = self.last_status_code
     req_param = pickle.dumps(self.request_parameters)
     req_cnt =self.executed_request_count
-    #print('\033[0;0m')
+
     try:
       cur = self.db.cursor()
       cur.execute('INSERT INTO fuzzing_log (status, req_set, req_param, req_cnt, context) VALUES(?, ?, ?, ?, ?)', (status, req_set , req_param, req_cnt, context))
@@ -104,10 +103,12 @@ class Fuzzing:
 
     for category in body:
       for item in body[category]:
-        if req.method == 'post' and body[category][item] not in self.context:
+        if req.method == 'post':
           callback_i(body[category])
         else:
-          callback_c({item: [body[category][item], None]})
+          if item not in self.independent_item:
+            callback_c({item: [body[category][item], None]})
+
   
     for item in path:
       callback_c({item: [path[item], None]})
@@ -117,8 +118,6 @@ class Fuzzing:
       val = find_val(obj, key)
       if val != None:
         self.context[key][1] = val
-    #print ('obj', obj)
-    #print ('ctx', self.context)
 
   def _get_random_value(self, _type):
     t = Mutation([])
@@ -155,22 +154,18 @@ class Fuzzing:
 
     if parameters == None:
       parameters = {}
-    #print(req.method, req.host, req.base_path, req.path)
+
     gen = RequestGenerator(req)
-    
-    for key in parameters:
-      val = parameters[key]
+    for key in self.independent_item:
+      val = self._get_random_value(self.independent_item[key])
       gen.set_parameter(key, val)
 
-    for key in self.independent_item:
-      if key not in parameters:
-        val = self._get_random_value(self.independent_item[key])
-        gen.set_parameter(key, val)
     for key in self.context:
       val = self.context[key][1]
-      if key not in parameters:
-        gen.set_parameter(key, val)
-
+      gen.set_parameter(key, val)
+    for key in parameters:
+      val = self._get_random_value(parameters[key])
+      gen.set_parameter(key, val)
     self.request_parameters.append(gen.get_parameters())
 
     try:
@@ -178,9 +173,9 @@ class Fuzzing:
       response_code, headers, content = gen.execute()
     except ParameterNotFilled:
       raise ForceStop('Parameter is not filled')
-
     self.last_status_code = response_code
-    if response_code == 500: raise ForceStop('status_code == 500')
+    if response_code / 100 == 5: raise ForceStop('status_code == 500')
+    if response_code / 100 == 4: raise ForceStop('status_code == 400')
 
     if 'content-type' in headers:
       content_type = headers['content-type'] # request's Accept is response's Content-Type
@@ -197,7 +192,6 @@ class Fuzzing:
       else:
         pass
 
-    #print (response_code)
     self.last_status_code = response_code
     return (headers, content)
 
@@ -218,6 +212,9 @@ class Fuzzing:
     for _name in mutation_target:
       _type = mutation_target[_name]
       
+      _do_mutate = bool(random.randrange(0, 2))
+      if not _do_mutate: continue
+
       type_change_flag = bool(random.randrange(0, 2))
       if type_change_flag:
         candidate_type = ['integer', 'string', 'array', 'float', 'boolean']
@@ -228,12 +225,8 @@ class Fuzzing:
           for key in req.parameter[category]:
             if _name in req.parameter[category][key]:
               req.parameter[category][key] = req.parameter[category][key].replace('\'{}\': \'{}\''.format(_name, _type), '\'{}\': \'{}\''.format(_name, to_type))
-        #{'require': {'body': "object*{'body': 'string', 'checksum': 'string'}"}, 'optional': {}}
-        #print(_name, _type)
-        #print(req.parameter) 
-        #print(req.req_param) 
-      mutation_input.update({_name: self._get_random_value(_type)})
-
+        _type = to_type
+      mutation_input.update({_name: _type})
     headers, content = self._request(req, mutation_input)
     return headers, content, 'how it mutated'
 
