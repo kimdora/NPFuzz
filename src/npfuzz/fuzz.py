@@ -1,4 +1,5 @@
 from sqlite3 import connect as sqlite3_open
+from sqlite3 import Error as SQLite3Error
 from request.generator import RequestGenerator, ParameterNotFilled
 from request.request import Request
 from utils.common import TerminateException, ForceStop
@@ -45,7 +46,7 @@ class Fuzzing:
       cur = self.db.cursor()
       cur.execute('INSERT INTO fuzzing_log (status, req_set, req_param, req_cnt, context) VALUES(?, ?, ?, ?, ?)', (status, req_set , req_param, req_cnt, context))
       self.db.commit()
-    except:
+    except SQLite3Error:
       raise TerminateException('db error')
 
   def _init_context(self):
@@ -55,27 +56,38 @@ class Fuzzing:
     self.last_status_code = 0
     self.request_parameters = []
 
-  def execute(self, seqSet):
+  def execute(self, seq_set):
+    try:
+      while True:
+        selected_seq = random.choice(seq_set)
+        self._execute_sequence(selected_seq)
+    except KeyboardInterrupt:
+      raise TerminateException('BYE/')
+    
+
+  def execute_sequence_set_once(self, seqSet):
     if not isinstance(seqSet, list):
       raise TerminateException('Fuzzing.execute should require list')
 
     for seq in seqSet:
-      self._init_context()
-      self._infer_context_parameter(seq)
-      last_req = seq[-1:][0]
+      self._execute_sequence(seq)
 
-      try:
-        # build up context
-        for req in seq[:-1]:
-          self._request(req)
+  def _execute_sequence(self, seq):
+    self._init_context()
+    self._infer_context_parameter(seq)
+    last_req = seq[-1:][0]
 
-        # do mutate      
-        self._request_mutation(last_req)
-      except ForceStop as e:
-        print("ForceStop", e.message)
-      finally:
-        self._log(seq)
-      #print('-' * 80)
+    try:
+      # build up context
+      for req in seq[:-1]:
+        self._request(req)
+
+      # do mutate      
+      self._request_mutation(last_req)
+    except ForceStop as e:
+      print("ForceStop", e.message)
+    finally:
+      self._log(seq)
 
   def _infer_context_parameter(self, req_set):
     callback_i = lambda x: self.independent_item.update(x)
