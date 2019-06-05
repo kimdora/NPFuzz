@@ -1,4 +1,4 @@
-# NPFuzz
+# SWAGFuzzer
 
 ## Install Dependency
 This program is written by python 3.
