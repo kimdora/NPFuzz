@@ -1,4 +1,4 @@
-PyYAML==5.1
+PyYAML==5.4
 requests>=2.20.0
 dict2xml==1.6
 pyxml2dict==1.0.1
